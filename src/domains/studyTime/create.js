@@ -1,33 +1,71 @@
 import uuidV4 from 'uuid/v4'
+import moment from 'moment'
 import client from '../../config/influxdb'
 import repository from '../../models/studyTime'
 
 export default async body => {
-  const { courseId, courseName } = body
+  const {
+    secondWatch,
+    courseId,
+    courseName,
+    courseItemId,
+    device,
+    gender,
+    birthday,
+    userEmail,
+    accessTime,
+  } = body
+
   const { measurement, fieldSchema, tagSchema } = repository
   const id = uuidV4(measurement)
 
-  client.schema(measurement, fieldSchema, tagSchema, {
+  const major = client
+  major.schema(measurement, fieldSchema, tagSchema, {
     // default is false
     stripUnknown: true,
   })
 
-  try {
-    await client
-      .write(measurement)
-      .tag({
-        _id: id,
-      })
-      .field({
-        courseId: courseId,
-        courseName: courseName,
-      })
+  const measurementMinor = `${measurement}_${moment().format('YYYY_MM')}`
+  // console.log('measurementMinor', measurementMinor);
 
-    await client
+  const minor = client
+  client.schema(measurementMinor, fieldSchema, tagSchema, {
+    // default is false
+    stripUnknown: true,
+  })
+
+  const dataTag = {
+    _id: id,
+    courseId: courseId,
+    courseName: courseName,
+    courseItemId: courseItemId,
+    device: device,
+    gender: gender,
+    birthday: birthday,
+    userEmail: userEmail,
+    accessTime: accessTime,
+  }
+
+  const dataField = {
+    secondWatch: secondWatch,
+  }
+
+  try {
+    await major
+      .write(measurement)
+      .tag(dataTag)
+      .field(dataField)
+
+    await minor
+      .write(measurementMinor)
+      .tag(dataTag)
+      .field(dataField)
+
+    await major
       .query(measurement)
       .condition('_id', id)
       .queue()
-    const resp = await client.syncQuery('json')
+    const resp = await major.syncQuery('json')
     return resp
   } catch (error) {
     console.log('error\n', error)

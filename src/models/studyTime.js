@@ -1,19 +1,21 @@
-// i --> integer
-// s --> string
-// f --> float
-// b --> boolean
-
 const fieldSchema = {
-  courseId: 's',
-  courseName: 's',
+  secondWatch: 'i',
 }
 
 const tagSchema = {
   _id: '*',
+  courseId: '*',
+  courseName: '*',
+  courseItemId: '*',
+  device: '*',
+  gender: '*',
+  birthday: '*',
+  userEmail: '*',
+  accessTime: '*',
 }
 
 const data = {
-  measurement: 'studyTime',
+  measurement: 'study_time',
   fieldSchema,
   tagSchema,
 }
